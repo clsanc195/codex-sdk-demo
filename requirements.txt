@@ -1,0 +1,4 @@
+openai-codex==0.167.1
+mcp>=2,<3
+fastapi>=0.110
+uvicorn>=0.30

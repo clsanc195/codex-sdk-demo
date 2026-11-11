@@ -1,0 +1,7 @@
+[
+  {"id": "CHG-POL-001", "title": "Production database schema changes", "applies_to": ["database", "schema"], "rule": "Schema changes to tier-1 databases need a tested rollback script and a DBA reviewer. Destructive changes (drop column, drop table) need a verified backup taken within 24 hours.", "severity": "high"},
+  {"id": "CHG-POL-004", "title": "Change freeze windows", "applies_to": ["freeze", "schedule", "deploy"], "rule": "No production deploys to tier-1 services during a declared freeze window unless the change is tagged emergency and approved by the service owner's director.", "severity": "high"},
+  {"id": "CHG-POL-007", "title": "Canary and staged rollout", "applies_to": ["deploy", "rollout", "service"], "rule": "Tier-1 service deploys go to a canary slice of at most 5 percent of traffic for at least 30 minutes before full rollout.", "severity": "medium"},
+  {"id": "CHG-POL-011", "title": "Configuration and feature flags", "applies_to": ["config", "flag"], "rule": "Config-only changes behind a feature flag are low risk when the flag defaults to off and has a named owner.", "severity": "low"},
+  {"id": "CHG-POL-015", "title": "Peer review", "applies_to": ["review", "approval"], "rule": "Every production change needs one reviewer outside the author's team for tier-1 services, and any one reviewer for tier-2 and tier-3.", "severity": "medium"}
+]

@@ -1,0 +1,5 @@
+[
+  {"service": "customer-profile-db", "tier": 1, "owner_team": "Customer Data", "freeze_windows": [{"name": "Year-end peak freeze", "start": "2026-11-25T00:00:00Z", "end": "2026-12-02T00:00:00Z"}]},
+  {"service": "payments-gateway", "tier": 1, "owner_team": "Payments Platform", "freeze_windows": [{"name": "Year-end peak freeze", "start": "2026-11-25T00:00:00Z", "end": "2026-12-02T00:00:00Z"}]},
+  {"service": "notification-service", "tier": 2, "owner_team": "Messaging", "freeze_windows": []}
+]

@@ -1,0 +1,24 @@
+# Project-scoped Codex configuration for the change-risk demo.
+# Codex loads a project .codex/config.toml only for projects you have trusted.
+# The demo service also reads this same file and passes [mcp_servers] to the SDK,
+# so there is one source of truth for the tool wiring.
+
+[mcp_servers.change_policy]
+# STDIO server: Codex starts this process itself.
+command = ".venv/bin/python"
+args = ["mcp_server/change_policy_server.py"]
+startup_timeout_sec = 20
+tool_timeout_sec = 45
+
+# Allow list: only these tools are exposed to the agent.
+enabled_tools = ["get_change_request", "get_service_profile", "search_policies"]
+
+# The service runs with nobody at a prompt, so pre-approve these read-only tools.
+default_tools_approval_mode = "approve"
+
+# --- Swapping in a real internal server over Streamable HTTP ---------------
+# [mcp_servers.change_policy]
+# url = "https://mcp.internal.example/change-policy/mcp"
+# bearer_token_env_var = "CHANGE_POLICY_MCP_TOKEN"   # token stays in the environment
+# enabled_tools = ["get_change_request", "get_service_profile", "search_policies"]
+# default_tools_approval_mode = "writes"             # prompt for anything not marked read-only

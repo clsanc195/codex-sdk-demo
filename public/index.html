@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Change Management</title>
+<style>
+  :root {
+    --bg: #f3f5f8; --surface: #ffffff; --line: #dde2e9; --line2: #edf0f4;
+    --ink: #1b2533; --ink2: #4a5668; --ink3: #77839a;
+    --nav: #12263f; --primary: #1d5bbf; --primary-ink: #ffffff;
+    --red: #b42318; --red-bg: #fdecea; --amber: #93600a; --amber-bg: #fdf3dc;
+    --green: #1e7a46; --green-bg: #e6f4ec; --blue-bg: #e9f0fb;
+    --mono: ui-monospace, "SF Mono", Menlo, "DejaVu Sans Mono", Consolas, monospace;
+    --sans: Inter, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--sans); display: flex; flex-direction: column; }
+  .topbar { background: var(--nav); color: #fff; height: 52px; display: flex; align-items: center; padding: 0 20px; gap: 14px; flex: none; }
+  .brand { font-weight: 600; font-size: 15px; letter-spacing: .1px; }
+  .brand small { font-weight: 400; color: #a9b8cc; margin-left: 10px; font-size: 13px; }
+  .grow { flex: 1; }
+  .env { font-size: 12px; color: #c8d3e2; border: 1px solid #36506f; border-radius: 4px; padding: 3px 9px; }
+  .mode { font-size: 12px; font-weight: 600; border-radius: 4px; padding: 4px 10px; }
+  .mode.live { background: #d9f0e2; color: #14592f; }
+  .mode.sim { background: #fde9b8; color: #6b4500; }
+  .crumbs { padding: 12px 24px 0; color: var(--ink3); font-size: 13px; }
+  .crumbs b { color: var(--ink2); font-weight: 500; }
+  main { flex: 1; display: grid; grid-template-columns: minmax(380px, 30%) minmax(0, 1fr); gap: 16px; padding: 12px 24px 16px; min-height: 0; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; display: flex; flex-direction: column; min-height: 0; }
+  .panel > header { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+  .panel > header h2 { margin: 0; font-size: 14px; font-weight: 600; }
+  .panel > header .count { color: var(--ink3); font-size: 13px; }
+  .scroll { overflow: auto; flex: 1; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink3); padding: 9px 12px; border-bottom: 1px solid var(--line); background: #fafbfc; position: sticky; top: 0; white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--line2); vertical-align: top; }
+  .list tr { cursor: pointer; }
+  .list tr:hover td { background: #f7f9fc; }
+  .list tr.sel td { background: var(--blue-bg); }
+  .list tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--primary); }
+  .id { font-weight: 600; color: var(--primary); white-space: nowrap; }
+  .muted { color: var(--ink3); font-size: 13px; }
+  .detail-head { padding: 16px 20px 14px; border-bottom: 1px solid var(--line); display: flex; gap: 16px; align-items: flex-start; }
+  .detail-head h1 { margin: 2px 0 0; font-size: 18px; font-weight: 600; line-height: 1.3; }
+  .btn { border: 1px solid var(--primary); background: var(--primary); color: var(--primary-ink); font: 600 14px var(--sans); padding: 8px 16px; border-radius: 5px; cursor: pointer; white-space: nowrap; }
+  .btn:disabled { background: #a9bbd8; border-color: #a9bbd8; cursor: default; }
+  .facts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; border-bottom: 1px solid var(--line); }
+  .fact { padding: 11px 20px; border-right: 1px solid var(--line2); min-width: 0; }
+  .fact:last-child { border-right: 0; }
+  .fact label { display: block; font-size: 12px; color: var(--ink3); margin-bottom: 2px; }
+  .fact div { font-size: 13.5px; overflow-wrap: anywhere; }
+  .body { padding: 16px 20px 20px; overflow: auto; flex: 1; }
+  h3 { font-size: 13px; font-weight: 600; margin: 0 0 8px; color: var(--ink2); display: flex; align-items: center; gap: 8px; }
+  h3 .muted { font-weight: 400; }
+  .card { border: 1px solid var(--line); border-radius: 6px; margin-bottom: 16px; overflow: hidden; }
+  .card .pad { padding: 14px 16px; }
+  .empty { color: var(--ink3); padding: 22px 16px; font-size: 13.5px; }
+  .risk { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--line2); }
+  .badge { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 10px; white-space: nowrap; display: inline-block; }
+  .badge.high, .badge.violation, .badge.failed { background: var(--red-bg); color: var(--red); }
+  .badge.medium, .badge.needs_info { background: var(--amber-bg); color: var(--amber); }
+  .badge.low, .badge.compliant, .badge.completed { background: var(--green-bg); color: var(--green); }
+  .badge.in_progress { background: var(--blue-bg); color: var(--primary); }
+  .badge.big { font-size: 13px; padding: 5px 12px; border-radius: 12px; }
+  .summary { font-size: 14.5px; }
+  .evidence { color: var(--ink2); font-size: 13px; }
+  .notice { background: var(--amber-bg); border: 1px solid #f0d695; color: #5f4204; border-radius: 6px; padding: 9px 12px; font-size: 13px; margin-bottom: 14px; display: none; }
+  .notice.on { display: block; }
+  ol.actions { margin: 0; padding: 12px 16px 12px 36px; }
+  ol.actions li { margin: 3px 0; }
+  .log td { font-size: 13px; padding: 8px 12px; }
+  .log .t { color: var(--ink3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .log .src { font: 12px var(--mono); color: var(--ink3); white-space: nowrap; }
+  .log .det { color: var(--ink2); overflow-wrap: anywhere; }
+  .log .det code { font: 12px var(--mono); color: var(--ink3); }
+  footer { flex: none; padding: 8px 24px 12px; color: var(--ink3); font-size: 12px; display: flex; gap: 22px; flex-wrap: wrap; }
+  footer span b { font-weight: 500; color: var(--ink2); }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } .facts { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">Change Management<small>Risk assessment</small></div>
+  <div class="grow"></div>
+  <div class="env">Demo environment · sample data</div>
+  <div class="mode" id="mode">…</div>
+</div>
+<div class="crumbs">Change requests / <b id="crumb">Select a request</b></div>
+<main>
+  <section class="panel">
+    <header><h2>Change requests</h2><span class="count" id="listCount"></span></header>
+    <div class="scroll">
+      <table class="list"><thead><tr><th>ID</th><th>Summary</th><th>Scheduled</th></tr></thead><tbody id="changes"></tbody></table>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="detail-head">
+      <div class="grow"><div class="muted" id="dId">No request selected</div><h1 id="dTitle">Select a change request to review</h1></div>
+      <button class="btn" id="go" disabled>Run risk assessment</button>
+    </div>
+    <div class="facts" id="facts"></div>
+    <div class="body" id="body">
+      <div class="notice" id="simNotice">Simulated assessment: this verdict comes from a scripted rule check in replay mode, not from a model. The tool calls listed under Activity are real calls to the policy MCP server.</div>
+      <h3>Risk assessment</h3>
+      <div class="card" id="result"><div class="empty">No assessment has been run for this request.</div></div>
+      <h3>Activity <span class="muted" id="actNote">Agent steps, as reported by the Codex SDK</span></h3>
+      <div class="card"><table class="log"><thead><tr><th style="width:86px">Time</th><th style="width:230px">Step</th><th>Detail</th><th style="width:110px">Status</th></tr></thead><tbody id="events"><tr><td colspan="4" class="empty">No activity yet.</td></tr></tbody></table></div>
+    </div>
+  </section>
+</main>
+<footer><span>Run: <b id="thread">none</b></span><span>Tokens: <b id="usage">none</b></span><span>Events: <b id="count">0</b></span><span>Tools: <b id="wiring">…</b></span></footer>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// The Python SDK reports app-server names (mcpToolCall, inProgress); the page uses snake_case.
+const snake = (s) => String(s).replace(/[A-Z]/g, (m) => "_" + m.toLowerCase());
+const label = (s) => ({ needs_info: "Needs information", violation: "Violation", compliant: "Compliant", in_progress: "Running", completed: "Done", failed: "Failed" }[s] || s);
+const stepNames = { get_change_request: "Read change request", get_service_profile: "Read service profile", search_policies: "Searched policies" };
+let all = [], selected = null, count = 0, mode = "live", lastUsage = null;
+const rows = new Map();
+const now = () => (window.__FILM_CLOCK__ ? window.__FILM_CLOCK__() : new Date().toLocaleTimeString("en-GB"));
+const when = (iso) => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC", hour12: false }) + " UTC";
+
+function setMeta(meta) {
+  mode = meta.mode;
+  $("mode").textContent = mode === "replay" ? "Simulated run" : "Live";
+  $("mode").className = "mode " + (mode === "replay" ? "sim" : "live");
+  $("wiring").textContent = Object.entries(meta.mcp_servers).map(([n, s]) => `${n} (${(s.enabled_tools || []).length} tools, ${s.transport})`).join(", ");
+}
+function setChanges(list) {
+  all = list;
+  $("listCount").textContent = list.length + " open";
+  $("changes").innerHTML = list.map((c) => `<tr data-id="${esc(c.id)}"><td class="id">${esc(c.id)}</td><td>${esc(c.title)}<div class="muted">${esc(c.service)}</div></td><td class="muted" style="white-space:nowrap">${esc(when(c.scheduled_for))}</td></tr>`).join("");
+  document.querySelectorAll("#changes tr").forEach((el) => (el.onclick = () => select(el.dataset.id)));
+}
+function select(id) {
+  selected = id;
+  const c = all.find((x) => x.id === id) || { id, title: id };
+  document.querySelectorAll("#changes tr").forEach((el) => el.classList.toggle("sel", el.dataset.id === id));
+  $("crumb").textContent = id; $("dId").textContent = id; $("dTitle").textContent = c.title;
+  const fact = (k, v) => `<div class="fact"><label>${k}</label><div>${v}</div></div>`;
+  $("facts").innerHTML = c.service ? fact("Service", esc(c.service)) + fact("Type", esc(c.type)) + fact("Scheduled for", esc(when(c.scheduled_for))) + fact("Reviewers", esc((c.reviewers || []).join(", ") || "None")) + fact("Rollback plan", c.rollback_plan ? esc(c.rollback_plan) : '<span class="muted">Not attached</span>') : "";
+  $("go").disabled = false;
+  reset(true);
+}
+function reset(idle) {
+  rows.clear(); count = 0; lastUsage = null;
+  $("events").innerHTML = idle ? '<tr><td colspan="4" class="empty">No activity yet.</td></tr>' : "";
+  $("result").innerHTML = `<div class="empty">${idle ? "No assessment has been run for this request." : "Assessment in progress…"}</div>`;
+  $("simNotice").classList.remove("on");
+  $("thread").textContent = "none"; $("usage").textContent = "none"; $("count").textContent = "0";
+}
+function row(key, step, detail, status) {
+  let el = rows.get(key);
+  if (!el) { el = document.createElement("tr"); el.dataset.t = now(); $("events").appendChild(el); rows.set(key, el); }
+  el.innerHTML = `<td class="t">${el.dataset.t}</td><td>${step}</td><td class="det">${detail || ""}</td><td>${status ? `<span class="badge ${status}">${label(status)}</span>` : ""}</td>`;
+  $("body").scrollTop = $("body").scrollHeight;
+}
+function applyEvent(ev) {
+  if (ev.item) ev = { ...ev, item: { ...ev.item, type: snake(ev.item.type), status: ev.item.status ? snake(ev.item.status) : ev.item.status } };
+  if (ev.type === "thread.tokenUsage.updated") { lastUsage = ev.tokenUsage?.total || null; return; }
+  if (ev.type === "turn.completed" && ev.turn?.status === "failed") ev = { type: "turn.failed", error: ev.turn.error };
+  if (ev.type === "error" && ev.willRetry) return;
+  $("count").textContent = ++count;
+  if (ev.type === "thread.started") { $("thread").textContent = ev.thread_id; row("t", "Assessment started", "Agent session opened"); }
+  else if (ev.type === "turn.started") row("turn", "Request sent to agent", `Assess ${esc(selected || "")} against change policies`);
+  else if (ev.type === "turn.completed") {
+    row("done", "Assessment complete", "", "completed");
+    const u = ev.usage ? { i: ev.usage.input_tokens, o: ev.usage.output_tokens } : lastUsage ? { i: lastUsage.inputTokens, o: lastUsage.outputTokens } : null;
+    $("usage").textContent = u ? `${u.i.toLocaleString()} in, ${u.o.toLocaleString()} out` : mode === "replay" ? "none (no model call in a simulated run)" : "not reported";
+  }
+  else if (ev.type === "turn.failed" || ev.type === "error") {
+    const msg = ev.message || ev.error?.message || "The run failed.";
+    row("err" + count, "Run failed", esc(msg), "failed");
+    $("result").innerHTML = `<div class="empty">The assessment did not complete. ${esc(msg)}</div>`;
+  }
+  else if (ev.type && ev.type.startsWith("item.")) {
+    const it = ev.item;
+    if (it.type === "mcp_tool_call") {
+      const args = it.arguments || {};
+      const what = it.tool === "search_policies" ? `“${esc(args.query ?? "")}”` : esc(Object.values(args).join(", "));
+      let detail = `${what} <code>${esc(it.server)}.${esc(it.tool)}</code>`;
+      if (it.error) detail += `<br>${esc(it.error.message)}`;
+      else if (it.tool === "search_policies" && it.result?.content?.[0]?.text) {
+        try { detail += `<br>${JSON.parse(it.result.content[0].text).map((p) => esc(p.id)).join(", ") || "No matching policy"}`; } catch {}
+      }
+      row(it.id, stepNames[it.tool] || esc(it.tool), detail, it.status);
+    } else if (it.type === "agent_message" && ev.type === "item.completed") {
+      let verdict = null;
+      try { const v = JSON.parse(it.text); if (typeof v?.risk_level === "string") verdict = v; } catch {}
+      if (verdict) { row(it.id, "Verdict returned", "Structured result received", "completed"); renderResult(verdict); }
+      else row(it.id, "Agent note", esc(it.text.slice(0, 240)));
+    } else if (it.type === "command_execution" && ev.type === "item.completed") row(it.id, "Ran command", `<code>${esc(it.command || "")}</code>`, it.status);
+    else if (it.type === "error") row(it.id, "Error", esc(it.message || ""), "failed");
+  }
+}
+function renderResult(v) {
+  $("simNotice").classList.toggle("on", mode === "replay");
+  setTimeout(() => { $("body").scrollTop = 0; }, 0);
+  $("result").innerHTML =
+    `<div class="risk"><span class="badge big ${esc(v.risk_level)}">${esc(v.risk_level[0].toUpperCase() + v.risk_level.slice(1))} risk</span><div class="summary">${esc(v.summary)}</div></div>` +
+    `<table><thead><tr><th style="width:120px">Policy</th><th style="width:150px">Status</th><th>Evidence</th></tr></thead><tbody>` +
+    v.findings.map((f) => `<tr><td style="font-weight:600;white-space:nowrap">${esc(f.policy_id)}</td><td><span class="badge ${esc(f.status)}">${label(f.status)}</span></td><td class="evidence">${esc(f.evidence)}</td></tr>`).join("") + `</tbody></table>` +
+    (v.required_actions.length ? `<table><thead><tr><th>Required before approval</th></tr></thead></table><ol class="actions">${v.required_actions.map((a) => `<li>${esc(a)}</li>`).join("")}</ol>` : "");
+}
+async function assess() {
+  reset(false); $("go").disabled = true; $("go").textContent = "Assessing…";
+  try {
+    const res = await fetch("/api/assess", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ change_id: selected }) });
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
+    for (;;) {
+      const { value, done } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i; while ((i = buf.indexOf("\n\n")) >= 0) { const line = buf.slice(0, i); buf = buf.slice(i + 2); if (line.startsWith("data: ")) applyEvent(JSON.parse(line.slice(6))); }
+    }
+  } catch (e) { applyEvent({ type: "error", message: String(e) }); }
+  $("go").disabled = false; $("go").textContent = "Run risk assessment";
+}
+$("go").onclick = assess;
+window.demo = { setMeta, setChanges, select, reset, applyEvent };
+if (!window.__FILM__) {
+  fetch("/api/meta").then((r) => r.json()).then(setMeta);
+  fetch("/api/changes").then((r) => r.json()).then((list) => {
+    setChanges(list);
+    // ?auto=CHG-1042 selects that change and starts an assessment.
+    const auto = new URLSearchParams(location.search).get("auto");
+    if (auto && list.some((c) => c.id === auto)) setTimeout(() => { select(auto); setTimeout(assess, 2500); }, 2500);
+  });
+}
+</script>
+</body>
+</html>
