@@ -12,6 +12,7 @@ All change requests, services and policies are fictional.
 | --- | --- | --- |
 | `.codex/config.toml` | Declares the MCP server, its tool allow list and approval mode | Config only |
 | `app.py` | FastAPI service. `assess_with_codex()` is the SDK integration | Low-code |
+| `prompts/assess_change.md` | The task text for one turn; `{change_id}` is filled in by `app.py` | Text only |
 | `public/index.html` | The page: picker, live event stream, verdict | Code |
 | `mcp_server/change_policy_server.py` | Stub internal MCP server over STDIO, three read-only tools | Code |
 | `data/*.json` | Fictional change requests, services, policies | Data |
@@ -63,7 +64,7 @@ enabled_tools = ["get_change_request", "get_service_profile", "search_policies"]
 default_tools_approval_mode = "writes"
 ```
 
-If the tool names differ, update `enabled_tools` and the prompt in `app.py`.
+If the tool names differ, update `enabled_tools` and `prompts/assess_change.md`.
 Replay mode only supports a STDIO server.
 
 ## Status: what was and was not verified
@@ -95,7 +96,7 @@ Not verified:
 
 ## Video
 
-`video/codex-sdk-showcase.mp4` (5:55) walks through the SDK, this code and the
+`video/codex-sdk-showcase.mp4` (6:16) walks through the SDK, this code and the
 recorded run. Narration is synthetic speech generated with Google AI Studio.
 
 ## Sources
